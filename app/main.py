@@ -160,6 +160,39 @@ async def send_video(chat_id: int, message_id: int, data: dict):
     """
     Send video message to user
     """
+    video_poster_url = data["video_poster_url"]
+    video_urls = data["video_urls"]
+    tweet_url = data["tweet_url"]
+    tweet_text = data["tweet_text"]
+    owner_name = data["owner_name"]
+    owner_username = data["owner_username"]
+
+    caption = (
+        f"{tweet_text}\n\n"
+        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
+        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
+        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
+    )
+
+    keyboard = InlineKeyboardMarkup()
+    for quality, link in video_urls.items():
+        title = quality.split("x")[1] + "p"
+        keyboard.row(
+            InlineKeyboardButton(
+                text=title,
+                url=link,
+            )
+        )
+    
+    await ChatActions.typing()
+
+    await bot.send_photo(
+        chat_id=chat_id,
+        photo=video_poster_url,
+        caption=emojize(caption),
+        reply_to_message_id=message_id,
+        reply_markup=keyboard,
+    )
 
 
 @dp.message_handler(commands=["start"])
