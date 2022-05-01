@@ -52,15 +52,19 @@ def edit_tweet_text(tweet_text: str, entities: dict) -> str:
     :return: The tweet text with the media url removed.
     """
     urls = entities.get("urls")
+    user_mentions = entities.get("user_mentions")
     for url in urls:
         expanded_url = url.get("expanded_url")
         shorted_url = url.get("url")
         tweet_text = tweet_text.replace(shorted_url, expanded_url)
+    for user in user_mentions:
+        screen_name = user.get("screen_name")
+        tweet_text = tweet_text.replace(f"@{screen_name}", "", 1)
     try:
         media_url = entities.get("media")[0].get("url")
-        return tweet_text.replace(f" {media_url}", "")
+        return tweet_text.replace(f"{media_url}", "").strip()
     except TypeError:
-        return tweet_text
+        return tweet_text.strip()
 
 
 def text_tweet_handler(data: dict) -> dict:
