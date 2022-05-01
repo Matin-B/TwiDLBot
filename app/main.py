@@ -122,6 +122,38 @@ async def send_album(chat_id: int, message_id: int, data: dict):
     """
     Send album (media group) message to user
     """
+    photo_urls = data["photo_urls"]
+    tweet_url = data["tweet_url"]
+    tweet_text = data["tweet_text"]
+    owner_name = data["owner_name"]
+    owner_username = data["owner_username"]
+
+    caption = (
+        f"{tweet_text}\n\n"
+        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
+        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
+        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
+    )
+
+    media_group = types.MediaGroup()
+    count = 0
+    for photo in photo_urls:
+        if count == 0:
+            media_group.attach_photo(
+                photo=photo,
+                caption=emojize(caption),
+            )
+            count += 1
+        else:
+            media_group.attach_photo(photo=photo)
+
+    await ChatActions.upload_photo()
+
+    await bot.send_media_group(
+        chat_id=chat_id,
+        media=media_group,
+        reply_to_message_id=message_id,
+    )
 
 
 async def send_video(chat_id: int, message_id: int, data: dict):
