@@ -57,9 +57,11 @@ def edit_tweet_text(tweet_text: str, entities: dict) -> str:
         expanded_url = url.get("expanded_url")
         shorted_url = url.get("url")
         tweet_text = tweet_text.replace(shorted_url, expanded_url)
+    """
     for user in user_mentions:
         screen_name = user.get("screen_name")
         tweet_text = tweet_text.replace(f"@{screen_name}", "", 1)
+    """
     try:
         media_url = entities.get("media")[0].get("url")
         return tweet_text.replace(f"{media_url}", "").strip()
@@ -295,7 +297,7 @@ def photo_tweet_handler(data: dict) -> dict:
             - owner_name: the name of the user who posted the tweet
     """
     photos = data.get("photos")
-    if len(photos) >= 1:
+    if len(photos) > 1:
         return album_tweet_handler(data)
     photo_url = photos[0].get("url") + "?name=large"
 

@@ -2,7 +2,7 @@ import logging
 from time import time
 
 from aiogram import Bot, Dispatcher, executor, filters, types
-from aiogram.types import (ContentType, InlineKeyboardButton,
+from aiogram.types import (ChatActions, ContentType, InlineKeyboardButton,
                            InlineKeyboardMarkup, ParseMode)
 from aiogram.utils.emoji import emojize
 from pymongo import MongoClient
@@ -53,6 +53,9 @@ async def send_text(chat_id: int, message_id: int, data: dict):
         f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
         f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
     )
+
+    await ChatActions.typing()
+
     await bot.send_message(
         chat_id=chat_id,
         text=emojize(caption),
@@ -77,6 +80,9 @@ async def send_gif(chat_id: int, message_id: int, data: dict):
         f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
         f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
     )
+
+    await ChatActions.upload_video()
+
     await bot.send_animation(
         chat_id=chat_id,
         animation=gif_url,
@@ -89,17 +95,38 @@ async def send_photo(chat_id: int, message_id: int, data: dict):
     """
     Send photo message to user
     """
+    photo_url = data["photo_url"]
+    tweet_url = data["tweet_url"]
+    tweet_text = data["tweet_text"]
+    owner_name = data["owner_name"]
+    owner_username = data["owner_username"]
 
+    caption = (
+        f"{tweet_text}\n\n"
+        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
+        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
+        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
+    )
 
-async def send_video(chat_id: int, message_id: int, data: dict):
-    """
-    Send video message to user
-    """
+    await ChatActions.upload_photo()
+
+    await bot.send_photo(
+        chat_id=chat_id,
+        photo=photo_url,
+        caption=emojize(caption),
+        reply_to_message_id=message_id,
+    )
 
 
 async def send_album(chat_id: int, message_id: int, data: dict):
     """
     Send album (media group) message to user
+    """
+
+
+async def send_video(chat_id: int, message_id: int, data: dict):
+    """
+    Send video message to user
     """
 
 
