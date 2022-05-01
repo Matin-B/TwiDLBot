@@ -42,8 +42,8 @@ async def send_text(chat_id: int, message_id: int, data: dict):
     """
     Send text message to user
     """
-    tweet_text = data["tweet_text"]
     tweet_url = data["tweet_url"]
+    tweet_text = data["tweet_text"]
     owner_name = data["owner_name"]
     owner_username = data["owner_username"]
 
@@ -65,6 +65,24 @@ async def send_gif(chat_id: int, message_id: int, data: dict):
     """
     Send gif message to user
     """
+    gif_url = data["gif_url"]
+    tweet_url = data["tweet_url"]
+    tweet_text = data["tweet_text"]
+    owner_name = data["owner_name"]
+    owner_username = data["owner_username"]
+
+    caption = (
+        f"{tweet_text}\n\n"
+        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
+        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
+        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
+    )
+    await bot.send_animation(
+        chat_id=chat_id,
+        animation=gif_url,
+        caption=emojize(caption),
+        reply_to_message_id=message_id,
+    )
 
 
 async def send_photo(chat_id: int, message_id: int, data: dict):
@@ -135,14 +153,22 @@ async def tweet_link_handler(message: types.Message):
         if type_name == "text":
             await delete_message(chat_id=chat_id, message_id=replied_message_id)
             await send_text(chat_id=chat_id, message_id=message_id, data=data)
-        elif type_name == "git":
-            pass
+
+        elif type_name == "gif":
+            await delete_message(chat_id=chat_id, message_id=replied_message_id)
+            await send_gif(chat_id=chat_id, message_id=message_id, data=data)
+
         elif type_name == "video":
-            pass
+            await delete_message(chat_id=chat_id, message_id=replied_message_id)
+            await send_video(chat_id=chat_id, message_id=message_id, data=data)
+
         elif type_name == "photo":
-            pass
+            await delete_message(chat_id=chat_id, message_id=replied_message_id)
+            await send_photo(chat_id=chat_id, message_id=message_id, data=data)
+
         elif type_name == "album":
-            pass
+            await delete_message(chat_id=chat_id, message_id=replied_message_id)
+            await send_album(chat_id=chat_id, message_id=message_id, data=data)
     elif status is False and tweet_details["status_code"] == 404:
         status_message = tweet_details["message"]
         await replied_message.edit_text(
