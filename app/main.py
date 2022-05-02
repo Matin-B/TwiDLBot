@@ -6,7 +6,6 @@ from aiogram.types import (ChatActions, ContentType, InlineKeyboardButton,
                            InlineKeyboardMarkup, ParseMode)
 from aiogram.utils.emoji import emojize
 from pymongo import MongoClient
-from requests import delete
 
 import config
 from twitter import download
@@ -26,6 +25,17 @@ bot = Bot(
 )
 
 dp = Dispatcher(bot=bot)
+
+
+def get_database():
+    """
+    Return database
+    """
+    # Create a connection
+    client = MongoClient(config.MONGO_URI)
+
+    # Get the database or create it if it doesn"t exist
+    return client["TwiDLBot-DB"]
 
 
 async def delete_message(chat_id: int, message_id: int):
@@ -200,6 +210,19 @@ async def start_command_handler(message: types.Message):
     """
     This is the start command handler.
     """
+    chat_id = message.chat.id
+
+    database = get_database()
+    user_collection = database["users"]
+    user_status = user_collection.find_one({"_id": chat_id})
+    if user_status is None:
+        user_collection.insert_one(
+            {
+                "_id": chat_id,
+                "inserted_time": time(),
+            }
+        )
+    
     await message.reply(
         emojize(
             "Hi, Welcome to TwiDLBot :raised_hand:\n\n"
