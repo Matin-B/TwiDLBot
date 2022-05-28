@@ -1,3 +1,4 @@
+from multiprocessing import Value
 import requests
 import re
 
@@ -27,15 +28,17 @@ def human_readable_filesize(num, suffix="B"):
 
 def check_content_size(url):
     response = requests.head(url, allow_redirects=True)
-    content_size = int(response.headers['Content-Length'])
+    content_size = int(response.headers['Content-Length']) # in bytes
     if content_size < 20971520:
         return {
             "status": True,
-            "size": human_readable_filesize(content_size)
+            "size": content_size,
+            "human_size": human_readable_filesize(content_size)
         }
     return {
         "status": False,
-        "size": human_readable_filesize(content_size)
+        "size": content_size,
+        "human_size": human_readable_filesize(content_size)
     }
 
 
@@ -155,7 +158,7 @@ def gif_tweet_handler(data: dict) -> dict:
     }
 
 
-def video_tweet_handler(data: dict) -> dict:
+def video_tweet_handler(data: dict, show_size: bool = False) -> dict:
     """
     Handle tweets that contain a video
     
@@ -192,7 +195,7 @@ def video_tweet_handler(data: dict) -> dict:
         video_quality = video_url.split("/vid/")[-1].split("/")[0]
         video_urls[video_quality] = video_url
     
-    # Sort the video urls by highest quality
+    # Sort the video urls by highest quality (dict)
     video_urls = dict(
         sorted(
             video_urls.items(),
@@ -200,6 +203,24 @@ def video_tweet_handler(data: dict) -> dict:
             reverse=True,
         )
     )
+
+    urls_list = []
+
+    if show_size:
+        for key, value in video_urls.items():
+            video_size = check_content_size(value)
+            urls_list.append({
+                "quality": key,
+                "url": value,
+                "size": video_size["size"],
+                "human_size": video_size["human_size"],
+            })
+    else:
+        for key, value in video_urls.items():
+            urls_list.append({
+                "quality": key,
+                "url": value,
+            })
     
     tweet_id_str = data.get("id_str")
     created_at = data.get("created_at")
@@ -220,7 +241,7 @@ def video_tweet_handler(data: dict) -> dict:
             "created_at": created_at,
             "tweet_url": tweet_url,
             "video_poster_url": video_poster_url,
-            "video_urls": video_urls,
+            "video_urls": urls_list,
             "owner_username": owner_username,
             "owner_name": owner_name,
         }
@@ -328,7 +349,7 @@ def photo_tweet_handler(data: dict) -> dict:
     }
 
 
-def download(url: str) -> dict:
+def download(url: str, show_size: bool = False) -> dict:
     if len(url) == 0:
         raise ValueError("URL cannot be empty.")
     url = url.replace("www.", "")
@@ -352,7 +373,7 @@ def download(url: str) -> dict:
     if response.status_code == 200:
         data = response.json()
         if "video" in data:
-            return video_tweet_handler(data)
+            return video_tweet_handler(data, show_size=True)
         else:
             if "photos" in data:
                 return photo_tweet_handler(data)
