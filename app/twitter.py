@@ -207,19 +207,23 @@ def video_tweet_handler(data: dict, show_size: bool = False) -> dict:
     urls_list = []
 
     if show_size:
-        for key, value in video_urls.items():
-            video_size = check_content_size(value)
+        for quality, link in video_urls.items():
+            video_size = check_content_size(link)
+            resolution = quality.split("x")[1] + "p"
             urls_list.append({
-                "quality": key,
-                "url": value,
+                "quality": quality,
+                "resolution": resolution,
+                "url": link,
                 "size": video_size["size"],
                 "human_size": video_size["human_size"],
             })
     else:
-        for key, value in video_urls.items():
+        for quality, link in video_urls.items():
+            resolution = quality.split("x")[1] + "p"
             urls_list.append({
-                "quality": key,
-                "url": value,
+                "quality": quality,
+                "resolution": resolution,
+                "url": link,
             })
     
     tweet_id_str = data.get("id_str")
@@ -373,7 +377,7 @@ def download(url: str, show_size: bool = False) -> dict:
     if response.status_code == 200:
         data = response.json()
         if "video" in data:
-            return video_tweet_handler(data, show_size=True)
+            return video_tweet_handler(data, show_size)
         else:
             if "photos" in data:
                 return photo_tweet_handler(data)
