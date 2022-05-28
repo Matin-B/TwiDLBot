@@ -38,6 +38,16 @@ def get_database():
     return client["TwiDLBot-DB"]
 
 
+def save_tweet(tweet_type: str, data: dict) -> None:
+    """
+    Save tweet to database
+    """
+    database = get_database()
+    collection = database["tweets"]
+
+    collection.insert_one(data)
+
+
 async def delete_message(chat_id: int, message_id: int):
     """
     It deletes the message that was replied to in the chat

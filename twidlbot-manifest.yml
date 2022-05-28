@@ -1,0 +1,14 @@
+kind: ExternalService
+name: twidlbot
+spec:
+  allow_http: true
+  image: 'twidlbot:v1.0.0'
+  image_pull_policy: IfNotPresent
+  path: /
+  port: 80
+  replicas: 1
+  resources:
+    memory: 200Mi
+  volume_mounts:
+    - mount_path: /videos
+    - mount_path: /photos
