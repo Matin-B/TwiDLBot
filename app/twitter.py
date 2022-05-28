@@ -95,7 +95,7 @@ def text_tweet_handler(data: dict) -> dict:
     entities = data.get("entities")
     tweet_text = edit_tweet_text(tweet_text, entities)
 
-    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}"
+    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}/"
     return {
         "status": True,
         "type_name": "text",
@@ -140,7 +140,7 @@ def gif_tweet_handler(data: dict) -> dict:
     entities = data.get("entities")
     tweet_text = edit_tweet_text(tweet_text, entities)
 
-    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}"
+    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}/"
     return {
         "status": True,
         "type_name": "gif",
@@ -210,9 +210,10 @@ def video_tweet_handler(data: dict) -> dict:
     entities = data.get("entities")
     tweet_text = edit_tweet_text(tweet_text, entities)
 
-    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}"
+    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}/"
     return {
         "status": True,
+        "status_code": 200,
         "type_name": "video",
         "data": {
             "tweet_text": tweet_text,
@@ -262,9 +263,10 @@ def album_tweet_handler(data: dict) -> dict:
     entities = data.get("entities")
     tweet_text = edit_tweet_text(tweet_text, entities)
 
-    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}"
+    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}/"
     return {
         "status": True,
+        "status_code": 200,
         "type_name": "album",
         "data": {
             "tweet_text": tweet_text,
@@ -310,9 +312,10 @@ def photo_tweet_handler(data: dict) -> dict:
     entities = data.get("entities")
     tweet_text = edit_tweet_text(tweet_text, entities)
 
-    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}"
+    tweet_url = f"https://twitter.com/{owner_username}/status/{tweet_id_str}/"
     return {
         "status": True,
+        "status_code": 200,
         "type_name": "photo",
         "data": {
             "tweet_text": tweet_text,
