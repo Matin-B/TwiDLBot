@@ -1,4 +1,3 @@
-from multiprocessing import Value
 import requests
 import re
 
@@ -103,6 +102,7 @@ def text_tweet_handler(data: dict) -> dict:
         "status": True,
         "type_name": "text",
         "data": {
+            "id_str": tweet_id_str,
             "tweet_text": tweet_text,
             "tweet_url": tweet_url,
             "created_at": created_at,
@@ -148,6 +148,7 @@ def gif_tweet_handler(data: dict) -> dict:
         "status": True,
         "type_name": "gif",
         "data": {
+            "id_str": tweet_id_str,
             "tweet_text": tweet_text,
             "created_at": created_at,
             "tweet_url": tweet_url,
@@ -241,6 +242,7 @@ def video_tweet_handler(data: dict, show_size: bool = False) -> dict:
         "status_code": 200,
         "type_name": "video",
         "data": {
+            "id_str": tweet_id_str,
             "tweet_text": tweet_text,
             "created_at": created_at,
             "tweet_url": tweet_url,
@@ -294,6 +296,7 @@ def album_tweet_handler(data: dict) -> dict:
         "status_code": 200,
         "type_name": "album",
         "data": {
+            "id_str": tweet_id_str,
             "tweet_text": tweet_text,
             "created_at": created_at,
             "tweet_url": tweet_url,
@@ -343,6 +346,7 @@ def photo_tweet_handler(data: dict) -> dict:
         "status_code": 200,
         "type_name": "photo",
         "data": {
+            "id_str": tweet_id_str,
             "tweet_text": tweet_text,
             "created_at": created_at,
             "tweet_url": tweet_url,
