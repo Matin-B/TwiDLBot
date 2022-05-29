@@ -1,12 +1,15 @@
 import logging
+import os
 from time import time
 
+import requests
 from aiogram import Bot, Dispatcher, executor, filters, types
 from aiogram.types import (ChatActions, ContentType, InlineKeyboardButton,
-                           InlineKeyboardMarkup, ParseMode, InputFile)
+                           InlineKeyboardMarkup, InputFile, ParseMode)
+from aiogram.utils import exceptions
 from aiogram.utils.emoji import emojize
 from pymongo import MongoClient
-from aiogram.utils import exceptions
+
 import config
 from twitter import download
 
@@ -46,6 +49,51 @@ def save_tweet(tweet_type: str, data: dict) -> None:
     collection = database["tweets"]
 
     collection.insert_one(data)
+
+
+def download_video(download_url) -> str:
+    """
+    Download video from url
+    
+    :param download_url: The url of the video
+    :return: The path to the video
+    """
+    VIDEOS_PATH = config.VOLUME_VIDEOS_PATH
+    response = requests.get(download_url)
+    file_name = download_url.split("?")[0].split("/")[-1]
+    file_path = f"{VIDEOS_PATH}/{file_name}"
+    with open(file_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size = 1024*1024): 
+            if chunk:
+                f.write(chunk)
+    return file_path
+
+
+def download_photo(download_url) -> str:
+    """
+    Download photo from url
+    
+    :param download_url: The url of the photo
+    :return: The path to the photo
+    """
+    PHOTOS_PATH = config.VOLUME_PHOTOS_PATH
+    response = requests.get(download_url)
+    file_name = download_url.split("?")[0].split("/")[-1]
+    file_path = f"{PHOTOS_PATH}/{file_name}"
+    with open(file_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size = 1024*1024): 
+            if chunk:
+                f.write(chunk)
+    return file_path
+
+
+def remove_file(file_path):
+    """
+    Remove file from disk
+    
+    :param file_path: The path to the file
+    """
+    os.remove(file_path)
 
 
 async def delete_message(chat_id: int, message_id: int):
@@ -130,12 +178,22 @@ async def send_photo(chat_id: int, message_id: int, data: dict):
 
     await ChatActions.upload_photo()
 
-    await bot.send_photo(
-        chat_id=chat_id,
-        photo=photo_url,
-        caption=emojize(caption),
-        reply_to_message_id=message_id,
-    )
+    try:
+        await bot.send_photo(
+            chat_id=chat_id,
+            photo=photo_url,
+            caption=emojize(caption),
+            reply_to_message_id=message_id,
+        )
+    except exceptions.WrongFileIdentifier:
+        photo_name = download_photo(photo_url)
+        await bot.send_photo(
+            chat_id=chat_id,
+            photo=photo_url,
+            caption=emojize(caption),
+            reply_to_message_id=message_id,
+        )
+        remove_file(photo_name)
 
 
 async def send_album(chat_id: int, message_id: int, data: dict):
