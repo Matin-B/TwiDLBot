@@ -3,10 +3,10 @@ from time import time
 
 from aiogram import Bot, Dispatcher, executor, filters, types
 from aiogram.types import (ChatActions, ContentType, InlineKeyboardButton,
-                           InlineKeyboardMarkup, ParseMode)
+                           InlineKeyboardMarkup, ParseMode, InputFile)
 from aiogram.utils.emoji import emojize
 from pymongo import MongoClient
-
+from aiogram.utils import exceptions
 import config
 from twitter import download
 
@@ -195,24 +195,56 @@ async def send_video(chat_id: int, message_id: int, data: dict):
     )
 
     keyboard = InlineKeyboardMarkup()
-    for quality, link in video_urls.items():
-        title = quality.split("x")[1] + "p"
+    for item in video_urls:
+        quality = item["quality"]
+        resolution = item["resolution"]
+        download_url = item["url"]
         keyboard.row(
             InlineKeyboardButton(
-                text=title,
-                url=link,
+                text=f"{resolution} ({quality})",
+                url=download_url,
             )
         )
+    high_quality_version = video_urls[0]
+    high_quality_version_url = high_quality_version["url"]
+    high_quality_version_size = high_quality_version["size"]
+    high_quality_version_human_size = high_quality_version["human_size"]
     
     await ChatActions.typing()
-
-    await bot.send_photo(
-        chat_id=chat_id,
-        photo=video_poster_url,
-        caption=emojize(caption),
-        reply_to_message_id=message_id,
-        reply_markup=keyboard,
-    )
+    
+    if high_quality_version_size < 20971520:
+        try:
+            await bot.send_video(
+                chat_id=chat_id,
+                video=high_quality_version_url,
+                caption=emojize(caption),
+                reply_to_message_id=message_id,
+                reply_markup=keyboard,
+            )
+        except exceptions.WrongFileIdentifier:
+            video_name = download_video(download_url)
+            await bot.send_video(
+                chat_id=chat_id,
+                video=high_quality_version_url,
+                caption=emojize(caption),
+                reply_to_message_id=message_id,
+                reply_markup=keyboard,
+            )
+            remove_file(video_name)
+    else:
+        text = (
+            f"Sorry, this video is too big (It's {high_quality_version_human_size}).\n" +
+            "Because of Telegram limitations(20 MB Max), we can't upload this file."
+            + "\nYou can download the file directly from the link below:\n\n" +
+            f"<a href=\"{high_quality_version_url}\">:inbox_tray: Download</a>\n\n" +
+            f"Tweet Text:\n{caption}"
+        )
+        await bot.send_message(
+            chat_id=chat_id,
+            text=emojize(text),
+            reply_to_message_id=message_id,
+            disable_web_page_preview=True,
+        )
 
 
 @dp.message_handler(commands=["start"])
@@ -270,7 +302,7 @@ async def tweet_link_handler(message: types.Message):
     error_404_gif = "https://media.giphy.com/media/6uGhT1O4sxpi8/giphy.gif"
 
     tweet_link = message.text
-    tweet_details = download(tweet_link)
+    tweet_details = download(url=tweet_link, show_size=True)
     status = tweet_details["status"]
     if status is True:
         type_name = tweet_details["type_name"]
@@ -322,7 +354,7 @@ async def invalid_format(message: types.Message):
             "Please enter Tweet URL. Sample:\n"
             "https://twitter.com/i/status/1481722124855169028"
         ),
-        disable_web_page_preview=True,
+        disable_web_page_preview=False,
     )
 
 
