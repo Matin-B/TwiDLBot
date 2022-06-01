@@ -106,21 +106,27 @@ async def delete_message(chat_id: int, message_id: int):
     await bot.delete_message(chat_id=chat_id, message_id=message_id)
 
 
-async def send_text(chat_id: int, message_id: int, data: dict):
+def generate_caption(data: dict) -> str:
     """
-    Send text message to user
+    Return footer for caption
     """
     tweet_url = data["tweet_url"]
     tweet_text = data["tweet_text"]
     owner_name = data["owner_name"]
     owner_username = data["owner_username"]
-
-    caption = (
+    return (
         f"{tweet_text}\n\n"
         f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
         f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
         f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
     )
+
+
+async def send_text(chat_id: int, message_id: int, data: dict):
+    """
+    Send text message to user
+    """
+    caption = generate_caption(data)
 
     await ChatActions.typing()
 
@@ -137,17 +143,8 @@ async def send_gif(chat_id: int, message_id: int, data: dict):
     Send gif message to user
     """
     gif_url = data["gif_url"]
-    tweet_url = data["tweet_url"]
-    tweet_text = data["tweet_text"]
-    owner_name = data["owner_name"]
-    owner_username = data["owner_username"]
 
-    caption = (
-        f"{tweet_text}\n\n"
-        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
-        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
-        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
-    )
+    caption = generate_caption(data)
 
     await ChatActions.upload_video()
 
@@ -164,17 +161,8 @@ async def send_photo(chat_id: int, message_id: int, data: dict):
     Send photo message to user
     """
     photo_url = data["photo_url"]
-    tweet_url = data["tweet_url"]
-    tweet_text = data["tweet_text"]
-    owner_name = data["owner_name"]
-    owner_username = data["owner_username"]
-
-    caption = (
-        f"{tweet_text}\n\n"
-        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
-        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
-        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
-    )
+    
+    caption = generate_caption(data)
 
     await ChatActions.upload_photo()
 
@@ -201,17 +189,8 @@ async def send_album(chat_id: int, message_id: int, data: dict):
     Send album (media group) message to user
     """
     photo_urls = data["photo_urls"]
-    tweet_url = data["tweet_url"]
-    tweet_text = data["tweet_text"]
-    owner_name = data["owner_name"]
-    owner_username = data["owner_username"]
-
-    caption = (
-        f"{tweet_text}\n\n"
-        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
-        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
-        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
-    )
+    
+    caption = generate_caption(data)
 
     media_group = types.MediaGroup()
     count = 0
@@ -240,17 +219,8 @@ async def send_video(chat_id: int, message_id: int, data: dict):
     """
     video_poster_url = data["video_poster_url"]
     video_urls = data["video_urls"]
-    tweet_url = data["tweet_url"]
-    tweet_text = data["tweet_text"]
-    owner_name = data["owner_name"]
-    owner_username = data["owner_username"]
-
-    caption = (
-        f"{tweet_text}\n\n"
-        f":link: <a href='{tweet_url}'>{owner_name} (@{owner_username})</a>\n\n"
-        f":robot: <a href='{BOT_URL}'>@{BOT_USERNAME}</a>\n"
-        f":loudspeaker: <a href='{CHANNEL_URL}'>@{CHANNEL_USERNAME}</a>"
-    )
+    
+    caption = generate_caption(data)
 
     keyboard = InlineKeyboardMarkup()
     for item in video_urls:
@@ -268,9 +238,8 @@ async def send_video(chat_id: int, message_id: int, data: dict):
     high_quality_version_size = high_quality_version["size"]
     high_quality_version_human_size = high_quality_version["human_size"]
     
-    await ChatActions.typing()
-    
     if high_quality_version_size < 20971520:
+        await ChatActions.upload_video()
         try:
             await bot.send_video(
                 chat_id=chat_id,
@@ -290,18 +259,20 @@ async def send_video(chat_id: int, message_id: int, data: dict):
             )
             remove_file(video_name)
     else:
+        await ChatActions.typing()
         text = (
-            f"Sorry, this video is too big (It's {high_quality_version_human_size}).\n" +
+            f"Sorry, this video is too big (It's {high_quality_version_human_size}).\n" 
             "Because of Telegram limitations(20 MB Max), we can't upload this file."
-            + "\nYou can download the file directly from the link below:\n\n" +
-            f"<a href=\"{high_quality_version_url}\">:inbox_tray: Download</a>\n\n" +
-            f"Tweet Text:\n{caption}"
+            "\nYou can download the file directly from the link below:\n\n" 
+            f"<a href=\"{high_quality_version_url}\">:inbox_tray: Download</a>" 
+            f" (Highest Quality)\n\n Tweet Text:\n{caption}"
         )
         await bot.send_message(
             chat_id=chat_id,
             text=emojize(text),
             reply_to_message_id=message_id,
             disable_web_page_preview=True,
+            reply_markup=keyboard,
         )
 
 
