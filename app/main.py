@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher, executor, filters, types
 from aiogram.types import (ChatActions, ContentType, InlineKeyboardButton,
                            InlineKeyboardMarkup, InputFile, ParseMode)
 from aiogram.utils import exceptions
-from aiogram.utils.emoji import emojize
+from emoji import emojize
 from pymongo import MongoClient
 
 import config
@@ -177,7 +177,7 @@ async def send_photo(chat_id: int, message_id: int, data: dict):
         photo_name = download_photo(photo_url)
         await bot.send_photo(
             chat_id=chat_id,
-            photo=photo_url,
+            photo=InputFile(photo_name),
             caption=emojize(caption),
             reply_to_message_id=message_id,
         )
@@ -192,25 +192,48 @@ async def send_album(chat_id: int, message_id: int, data: dict):
     
     caption = generate_caption(data)
 
-    media_group = types.MediaGroup()
-    count = 0
-    for photo in photo_urls:
-        if count == 0:
-            media_group.attach_photo(
-                photo=photo,
-                caption=emojize(caption),
-            )
-            count += 1
-        else:
-            media_group.attach_photo(photo=photo)
+    try:
+        media_group = types.MediaGroup()
+        count = 0
+        for photo in photo_urls:
+            if count == 0:
+                media_group.attach_photo(
+                    photo=photo,
+                    caption=emojize(caption),
+                )
+                count += 1
+            else:
+                media_group.attach_photo(photo=photo)
 
-    await ChatActions.upload_photo()
+        await ChatActions.upload_photo()
 
-    await bot.send_media_group(
-        chat_id=chat_id,
-        media=media_group,
-        reply_to_message_id=message_id,
-    )
+        await bot.send_media_group(
+            chat_id=chat_id,
+            media=media_group,
+            reply_to_message_id=message_id,
+        )
+    except exceptions.WrongFileIdentifier:
+        media_group = types.MediaGroup()
+        count = 0
+        for photo in photo_urls:
+            photo_name = download_photo(photo)
+            if count == 0:
+                media_group.attach_photo(
+                    photo=InputFile(photo_name),
+                    caption=emojize(caption),
+                )
+                count += 1
+            else:
+                media_group.attach_photo(photo=InputFile(photo_name))
+            remove_file(photo_name)
+
+        await ChatActions.upload_photo()
+
+        await bot.send_media_group(
+            chat_id=chat_id,
+            media=media_group,
+            reply_to_message_id=message_id,
+        )
 
 
 async def send_video(chat_id: int, message_id: int, data: dict):
@@ -252,7 +275,7 @@ async def send_video(chat_id: int, message_id: int, data: dict):
             video_name = download_video(download_url)
             await bot.send_video(
                 chat_id=chat_id,
-                video=high_quality_version_url,
+                video=InputFile(video_name),
                 caption=emojize(caption),
                 reply_to_message_id=message_id,
                 reply_markup=keyboard,
@@ -282,6 +305,7 @@ async def start_command_handler(message: types.Message):
     This is the start command handler.
     """
     chat_id = message.chat.id
+    user_first_name = message.from_user.first_name
 
     database = get_database()
     user_collection = database["users"]
@@ -296,13 +320,13 @@ async def start_command_handler(message: types.Message):
     
     await message.reply(
         emojize(
-            "Hi, Welcome to TwiDLBot :raised_hand:\n\n"
-            "You can send an Tweet link to see and download."
+            f"Hi {user_first_name}, Welcome to TwiDLBot :raised_hand:\n"
+            "Please send me a Tweet link to download.\n\n"
             "Sample link:\nhttps://twitter.com/i/status/1481722124855169028"
             "\n\nOther bots:\n"
-            "<a href='https://t.me/IgGramBot?start=ref_bot_TwiDLBot'>@IgGramBot</a>"
-            ": IgGramBot is a bot that helps you download Instagram videos, photos,"
-            " IGTV, Reels, Stories & Highlights Instagram from Telegram."
+            "<a href='https://t.me/IgGramBot?start=ref_bot_TwiDLBot'>@IgGramBot</a>: "
+            "<b>IgGramBot allows you to download Instagram videos, photos, "
+            "IGTV, Reels, Stories & Highlights from Telegram.</b>"
         ),
         disable_web_page_preview=True,
     )
@@ -326,9 +350,6 @@ async def tweet_link_handler(message: types.Message):
         )
     )
     replied_message_id = replied_message.message_id
-
-    error_gif = "https://media.giphy.com/media/sS8YbjrTzu4KI/giphy.gif"
-    error_404_gif = "https://media.giphy.com/media/6uGhT1O4sxpi8/giphy.gif"
 
     tweet_link = message.text
     tweet_details = download(url=tweet_link, show_size=True)
@@ -357,12 +378,14 @@ async def tweet_link_handler(message: types.Message):
             await send_album(chat_id=chat_id, message_id=message_id, data=data)
     elif status is False and tweet_details["status_code"] == 404:
         status_message = tweet_details["message"]
+        error_404_gif = "https://media.giphy.com/media/6uGhT1O4sxpi8/giphy.gif"
         await replied_message.edit_text(
             emojize(
-                f"<a href=\"{error_404_gif}\">&#160</a>" + status_message
+                f"<a href=\"{error_404_gif}\">&#160</a>{status_message}"
             ),
         )
     else:
+        error_gif = "https://media.giphy.com/media/sS8YbjrTzu4KI/giphy.gif"
         await replied_message.edit_text(
             emojize(
                 ":man_facepalming_light_skin_tone: There's something wrong ..."
@@ -380,7 +403,7 @@ async def invalid_format(message: types.Message):
     """
     await message.reply(
         text=(
-            "Please enter Tweet URL. Sample:\n"
+            "The Tweet link should be entered in the following format:\n"
             "https://twitter.com/i/status/1481722124855169028"
         ),
         disable_web_page_preview=False,

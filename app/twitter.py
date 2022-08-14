@@ -185,17 +185,14 @@ def video_tweet_handler(data: dict, show_size: bool = False) -> dict:
     video_poster_url = video.get("poster") + "?name=large"
     video_variants = video.get("variants")
     count = 0
-    for item in video_variants:
+    for count, item in enumerate(video_variants):
         if item['type'] == 'application/x-mpegURL':
             video_variants.pop(count)
-        count += 1
-    
     video_urls = {}
     for item in video_variants:
         video_url = item.get("src")
         video_quality = video_url.split("/vid/")[-1].split("/")[0]
         video_urls[video_quality] = video_url
-    
     # Sort the video urls by highest quality (dict)
     video_urls = dict(
         sorted(
@@ -207,8 +204,8 @@ def video_tweet_handler(data: dict, show_size: bool = False) -> dict:
 
     urls_list = []
 
-    if show_size:
-        for quality, link in video_urls.items():
+    for quality, link in video_urls.items():
+        if show_size:
             video_size = check_content_size(link)
             resolution = quality.split("x")[1] + "p"
             urls_list.append({
@@ -218,15 +215,14 @@ def video_tweet_handler(data: dict, show_size: bool = False) -> dict:
                 "size": video_size["size"],
                 "human_size": video_size["human_size"],
             })
-    else:
-        for quality, link in video_urls.items():
+        else:
             resolution = quality.split("x")[1] + "p"
             urls_list.append({
                 "quality": quality,
                 "resolution": resolution,
                 "url": link,
             })
-    
+
     tweet_id_str = data.get("id_str")
     created_at = data.get("created_at")
     owner_username = data.get("user").get("screen_name")
@@ -275,11 +271,7 @@ def album_tweet_handler(data: dict) -> dict:
     """
     photos = data.get("photos")
     photo_count = len(photos)
-    photo_urls = []
-    for photo in photos:
-        photo_urls.append(
-            photo.get("url") + "?name=large"
-        )
+    photo_urls = [photo.get("url") + "?name=large" for photo in photos]
 
     tweet_id_str = data.get("id_str")
     created_at = data.get("created_at")
@@ -358,7 +350,7 @@ def photo_tweet_handler(data: dict) -> dict:
 
 
 def download(url: str, show_size: bool = False) -> dict:
-    if len(url) == 0:
+    if not url:
         raise ValueError("URL cannot be empty.")
     url = url.replace("www.", "")
     if "t.co/" in url:
@@ -372,7 +364,7 @@ def download(url: str, show_size: bool = False) -> dict:
             "status_code": 400,
             "message": "The url is not a tweet url",
         }
-    tweet_id = tweet_id.group(1)
+    tweet_id = tweet_id[1]
     parameters = (
         ("id", tweet_id),
         ("lang", "en"),
@@ -382,10 +374,9 @@ def download(url: str, show_size: bool = False) -> dict:
         data = response.json()
         if "video" in data:
             return video_tweet_handler(data, show_size)
-        else:
-            if "photos" in data:
-                return photo_tweet_handler(data)
-            return text_tweet_handler(data)
+        elif "photos" in data:
+            return photo_tweet_handler(data)
+        return text_tweet_handler(data)
     elif response.status_code == 404:
         return {
             "status": False,
