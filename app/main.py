@@ -11,7 +11,7 @@ from emoji import emojize
 from pymongo import MongoClient
 
 import config
-from twitter import download
+from twigram import download
 
 CHANNEL_USERNAME = config.CHANNEL_USERNAME
 BOT_USERNAME = config.BOT_USERNAME

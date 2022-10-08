@@ -2,7 +2,7 @@ kind: ExternalService
 name: twidlbot
 spec:
   allow_http: true
-  image: 'twidlbot:v1.1.5'
+  image: 'twidlbot:v1.2.2'
   image_pull_policy: IfNotPresent
   path: /
   port: 80
