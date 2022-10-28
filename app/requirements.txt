@@ -13,6 +13,6 @@ idna==3.3
 multidict==6.0.2
 pymongo==4.2.0
 pytz==2022.2.1
-TwiGram==1.1.0
+TwiGram==1.1.1
 urllib3==1.26.11
 yarl==1.8.1
