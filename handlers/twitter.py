@@ -1,13 +1,15 @@
+import re
 from aiogram import Router, F
-from aiogram.filters import Command
 from aiogram.types import Message
 from emoji import emojize
 
 router = Router()
 
-@router.message(
-    F.text.regexp(r"twitter.com\/.*\/status\/([0-9]*)"),
+TWITTER_URL_PATTERN = re.compile(
+    r"(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/([0-9]+)"
 )
+
+@router.message(F.text.regexp(TWITTER_URL_PATTERN))
 async def handle_twitter_links(message: Message) -> None:
     await message.reply(
         text=emojize(
