@@ -1,0 +1,13 @@
+[Unit]
+Description=TwiDLBot
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/TwiDLBot/
+Environment="PATH=/root/TwiDLBot/.venv/bin"
+ExecStart=/root/TwiDLBot/.venv/bin/python3.14 main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
