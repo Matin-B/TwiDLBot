@@ -7,6 +7,7 @@ from aiogram.types import (
     Message,
     FSInputFile,
     InputMediaPhoto,
+    InputMediaVideo,
     LinkPreviewOptions
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -78,7 +79,7 @@ def generate_caption(data: dict) -> str:
     owner_username = data["owner_username"]
     
     return (
-        f"{tweet_text}\n\n"
+        f"{tweet_text}\n\n\n"
         f":link: <a href=\"{tweet_url}\">{owner_name} (@{owner_username})</a>\n\n"
         f":robot: <a href=\"{BOT_URL}\">@{BOT_USERNAME}</a>\n"
         f":loudspeaker: <a href=\"{CHANNEL_URL}\">@{CHANNEL_USERNAME}</a>"
@@ -150,45 +151,66 @@ async def send_album(bot: Bot, chat_id: int, message_id: int, data: dict) -> Non
     """
     Send album (media group) message to user
     """
-    photo_urls = data["photo_urls"]
+    urls = data["urls"]
     caption = emojize(generate_caption(data))
 
-    await bot.send_chat_action(chat_id=chat_id, action="upload_photo")
 
-    # Build the list of InputMediaPhoto objects for Aiogram 3
+    await bot.send_chat_action(chat_id=chat_id, action="typing")
+
     media_group = []
-    for index, photo_url in enumerate(photo_urls):
-        # Only attach the caption to the first photo in the album
-        media_caption = caption if index == 0 else None
-        media_group.append(
-            InputMediaPhoto(media=photo_url, caption=media_caption)
-        )
+    for item in urls:
+        item_type = item["type"]
+        item_url = item["url"]
+        if item_type == "photo":
+            media_group.append(InputMediaPhoto(media=item_url, caption=caption))
+        elif item_type == "video":
+            media_group.append(InputMediaVideo(media=item_url, caption=caption))
 
     try:
-        await bot.send_media_group(
+        sended_album_message = await bot.send_media_group(
             chat_id=chat_id,
             media=media_group,
             reply_to_message_id=message_id,
+        )
+        sended_album_message_id = sended_album_message[0].message_id
+        await bot.send_message(
+            chat_id=chat_id,
+            text=caption,
+            reply_to_message_id=sended_album_message_id,
         )
     except TelegramBadRequest:
         # Fallback: Download all photos and build a new media group with FSInputFile
         fallback_media_group = []
         downloaded_files = []
-        
-        for index, photo_url in enumerate(photo_urls):
-            photo_name = download_photo(photo_url)
-            downloaded_files.append(photo_name)
-            
-            media_caption = caption if index == 0 else None
-            fallback_media_group.append(
-                InputMediaPhoto(media=FSInputFile(photo_name), caption=media_caption)
-            )
 
-        await bot.send_media_group(
+        for item in urls:
+            item_type = item["type"]
+            item_url = item["url"]
+            if item_type == "photo":
+                photo_name = download_photo(item_url)
+                downloaded_files.append(photo_name)
+                fallback_media_group.append(
+                    InputMediaPhoto(media=FSInputFile(photo_name), caption=caption)
+                )
+            elif item_type == "video":
+                video_name = download_video(item_url)
+                downloaded_files.append(video_name)
+                fallback_media_group.append(
+                    InputMediaVideo(media=FSInputFile(video_name), caption=caption)
+                )
+
+        sended_album_message = await bot.send_media_group(
             chat_id=chat_id,
             media=fallback_media_group,
             reply_to_message_id=message_id,
         )
+        sended_album_message_id = sended_album_message[0].message_id
+        await bot.send_message(
+            chat_id=chat_id,
+            text=caption,
+            reply_to_message_id=sended_album_message_id,
+        )
+
         
         # Cleanup downloaded files
         for file_path in downloaded_files:
