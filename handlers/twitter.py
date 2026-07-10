@@ -237,8 +237,8 @@ async def send_video(bot: Bot, chat_id: int, message_id: int, data: dict) -> Non
     high_quality_version_size = high_quality_version["size"]
     high_quality_version_human_size = high_quality_version["human_size"]
     
-    # 20MB limit in bytes
-    if high_quality_version_size < 20971520:
+    # 2000MB limit in bytes
+    if high_quality_version_size < 2097152000:
         await bot.send_chat_action(chat_id=chat_id, action="upload_video")
         try:
             await bot.send_video(
