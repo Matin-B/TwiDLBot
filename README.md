@@ -2,7 +2,7 @@
 
 A high-performance, self-hosted Telegram bot for downloading media from X (formerly Twitter). 
 
-TwiDLBot is built on top of the [TwiGram](https://github.com/Matin-B/TwiGram) library and leverages `aiogram` 3.x. To bypass standard Telegram file size restrictions (allowing video downloads up to 2,000 MB), this project is engineered to run alongside a **Local Telegram Bot API server** via Docker.
+TwiDLBot is built on top of the [TwiGram](https://github.com/Matin-B/TwiGram).
 
 ## Features
 
