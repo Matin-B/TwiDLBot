@@ -1,3 +1,11 @@
 BOT_API_TOKEN = ""
 DEVELOPER_TELEGRAM_ID = 
 MONGO_URI = "mongodb://localhost:27017/"
+
+CHANNEL_USERNAME = "TwiDLChannel"
+CHANNEL_URL = f"https://t.me/{CHANNEL_USERNAME}"
+BOT_USERNAME = "TwiDLBot"
+BOT_URL = f"https://t.me/{BOT_USERNAME}"
+
+VOLUME_PHOTOS_PATH = ""
+VOLUME_VIDEOS_PATH = ""
