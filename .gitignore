@@ -135,3 +135,7 @@ vscode/
 # Configuration file
 config.py
 .config.py
+docker-compose.yml
+
+# Temporary files
+downloads/
