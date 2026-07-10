@@ -227,7 +227,7 @@ async def send_video(bot: Bot, chat_id: int, message_id: int, data: dict) -> Non
     keyboard_builder = InlineKeyboardBuilder()
     for item in video_urls:
         keyboard_builder.button(
-            text=f"{item['resolution']} ({item['quality']})",
+            text=emojize(f":link: {item['resolution']} ({item['quality']})"),
             url=item["url"],
         )
     keyboard_builder.adjust(1)
