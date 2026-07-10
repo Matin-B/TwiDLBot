@@ -1,6 +1,7 @@
 BOT_API_TOKEN = ""
 DEVELOPER_TELEGRAM_ID = 
 MONGO_URI = "mongodb://localhost:27017/"
+LOCAL_API_URL = "http://127.0.0.1:8081"
 
 CHANNEL_USERNAME = "TwiDLChannel"
 CHANNEL_URL = f"https://t.me/{CHANNEL_USERNAME}"

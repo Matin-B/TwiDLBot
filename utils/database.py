@@ -5,7 +5,7 @@ from config import MONGO_URI
 from datetime import datetime, timezone
 
 client = MongoClient(MONGO_URI)
-db = client["telegram_bot"]
+db = client["TwiDLBot"]
 
 def add_user(user_id: int) -> None:
     """
