@@ -31,7 +31,7 @@ pure_eval==0.2.3
 pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments==2.20.0
-pymongo==4.17.0
+pymongo==4.18.2
 requests==2.34.2
 stack-data==0.6.3
 traitlets==5.15.1
